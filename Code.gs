@@ -28,7 +28,7 @@ function saveRecord_(data) {
   lock.waitLock(10000);
   try {
     const sheet = getSheet_();
-    sheet.appendRow([safe_(record.name), safe_(record.industry), safe_(record.email), safe_(record.marketingType), safe_(record.marketingTools), safe_(record.phone)]);
+    sheet.appendRow([safe_(record.name), safe_(record.industry), safe_(record.email), safe_(record.marketingType), safe_(record.marketingTools), phone_(record.phone)]);
     return json_({ success: true, message: '참여 정보가 저장되었습니다.', rowNumber: sheet.getLastRow(), record: record });
   } finally {
     lock.releaseLock();
@@ -51,7 +51,7 @@ function updateResult_(data) {
       rowNumber = findLatestRow_(sheet, record, lastRow);
     }
     if (!rowNumber) return json_({ success: false, message: '일치하는 참여 기록을 찾지 못했습니다. 처음부터 다시 등록해 주세요.' });
-    sheet.getRange(rowNumber, 4, 1, 2).setValues([[safe_(record.marketingType), safe_(record.marketingTools), safe_(record.phone)]]);
+    sheet.getRange(rowNumber, 4, 1, 2).setValues([[safe_(record.marketingType), safe_(record.marketingTools), phone_(record.phone)]]);
     SpreadsheetApp.flush();
     return json_({ success: true, message: '진단 결과가 저장되었습니다.', rowNumber: rowNumber, marketingType: record.marketingType, marketingTools: record.marketingTools });
   } finally {
@@ -124,4 +124,5 @@ function requestData_(e) {
 
 function text_(value) { return String(value == null ? '' : value).trim(); }
 function safe_(value) { const text = text_(value); return /^[=+\-@]/.test(text) ? "'" + text : text; }
+function phone_(value) { const text = text_(value).replace(/\D/g, ""); return text ? "'" + text : ""; }
 function json_(payload) { return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON); }
