@@ -1,5 +1,5 @@
 const SHEET_NAME = '사장의마케팅_DB';
-const HEADERS = ['성명', '업종', '이메일', '유형', '마케팅도구'];
+const HEADERS = ['성명', '업종', '이메일', '유형', '마케팅도구', '휴대폰번호(선택)'];
 
 function doGet(e) {
   const action = String((e && e.parameter && e.parameter.action) || 'list').toLowerCase();
@@ -28,7 +28,7 @@ function saveRecord_(data) {
   lock.waitLock(10000);
   try {
     const sheet = getSheet_();
-    sheet.appendRow([safe_(record.name), safe_(record.industry), safe_(record.email), safe_(record.marketingType), safe_(record.marketingTools)]);
+    sheet.appendRow([safe_(record.name), safe_(record.industry), safe_(record.email), safe_(record.marketingType), safe_(record.marketingTools), safe_(record.phone)]);
     return json_({ success: true, message: '참여 정보가 저장되었습니다.', rowNumber: sheet.getLastRow(), record: record });
   } finally {
     lock.releaseLock();
@@ -51,7 +51,7 @@ function updateResult_(data) {
       rowNumber = findLatestRow_(sheet, record, lastRow);
     }
     if (!rowNumber) return json_({ success: false, message: '일치하는 참여 기록을 찾지 못했습니다. 처음부터 다시 등록해 주세요.' });
-    sheet.getRange(rowNumber, 4, 1, 2).setValues([[safe_(record.marketingType), safe_(record.marketingTools)]]);
+    sheet.getRange(rowNumber, 4, 1, 2).setValues([[safe_(record.marketingType), safe_(record.marketingTools), safe_(record.phone)]]);
     SpreadsheetApp.flush();
     return json_({ success: true, message: '진단 결과가 저장되었습니다.', rowNumber: rowNumber, marketingType: record.marketingType, marketingTools: record.marketingTools });
   } finally {
@@ -63,8 +63,8 @@ function listRecords_() {
   const sheet = getSheet_();
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return json_({ success: true, count: 0, records: [] });
-  const records = sheet.getRange(2, 1, lastRow - 1, 5).getDisplayValues().map(function (row, index) {
-    return { rowNumber: index + 2, name: row[0], industry: row[1], email: row[2], marketingType: row[3], marketingTools: row[4] };
+  const records = sheet.getRange(2, 1, lastRow - 1, 6).getDisplayValues().map(function (row, index) {
+    return { rowNumber: index + 2, name: row[0], industry: row[1], email: row[2], marketingType: row[3], marketingTools: row[4], phone: row[5] };
   });
   return json_({ success: true, count: records.length, records: records });
 }
@@ -102,7 +102,8 @@ function normalizeRecord_(data) {
     industry: text_(data.industry || data.business || data['업종']),
     email: text_(data.email || data['이메일']),
     marketingType: text_(data.marketingType || data.type || data['유형']),
-    marketingTools: text_(data.marketingTools || data.tools || data['마케팅도구'])
+    marketingTools: text_(data.marketingTools || data.tools || data['마케팅도구']),
+    phone: text_(data.phone || data.contact || data['휴대폰번호'])
   };
 }
 
